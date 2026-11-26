@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>스마트 전기안전 통합관리</title>
+<style>
+:root {
+  --bg: #f1f5f9;
+  --surface: #ffffff;
+  --surface-sub: #f8fafc;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --primary: #0284c7;
+  --primary-bg: #e0f2fe;
+  --ok: #059669;
+  --ok-bg: #d1fae5;
+  --cau: #d97706;
+  --cau-bg: #fef3c7;
+  --war: #ea580c;
+  --war-bg: #ffedd5;
+  --dan: #dc2626;
+  --dan-bg: #fee2e2;
+  --off: #475569;
+  --off-bg: #e2e8f0;
+}
+[data-theme="dark"] {
+  --bg: #0b1120;
+  --surface: #111827;
+  --surface-sub: #1e293b;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --border: #1e293b;
+  --primary: #38bdf8;
+  --primary-bg: #172554;
+  --ok: #34d399;
+  --ok-bg: #064e3b;
+  --cau: #fbbf24;
+  --cau-bg: #451a03;
+  --war: #fb923c;
+  --war-bg: #431407;
+  --dan: #f87171;
+  --dan-bg: #450a0a;
+  --off: #94a3b8;
+  --off-bg: #1e293b;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+}
+.topbar-in {
+  max-width: 1060px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.title-wrap h1 { margin: 0; font-size: 16px; font-weight: 800; }
+.title-wrap small { font-size: 11px; color: var(--muted); display: block; }
+.top-btns { display: flex; gap: 6px; }
+
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding: 4px;
+}
+.nav button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 6px 2px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.nav button.on { background: var(--primary-bg); color: var(--primary); }
+
+@media (min-width: 820px) {
+  .nav {
+    position: sticky;
+    top: 53px;
+    border-top: 0;
+    border-bottom: 1px solid var(--border);
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 6px 14px;
+  }
+  .nav button { flex-direction: row; font-size: 13px; gap: 6px; padding: 8px; }
+}
+
+main {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 12px 12px 84px;
+}
+@media (min-width: 820px) { main { padding-bottom: 32px; } }
+
+section { display: none; }
+section.on { display: block; }
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+@media (min-width: 640px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+}
+.kpi .n { font-size: 26px; font-weight: 900; line-height: 1.1; }
+.kpi .l { font-size: 12px; color: var(--muted); font-weight: 700; margin-top: 2px; }
+
+.two-col { display: grid; gap: 12px; }
+@media (min-width: 820px) {
+  .two-col { grid-template-columns: 1.3fr 0.7fr; }
+  .two-even { grid-template-columns: 1fr 1fr; }
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.card-hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.card-hd h2 { margin: 0; font-size: 15px; font-weight: 800; }
+.card-hd small { font-size: 12px; color: var(--muted); }
+
+.st-OK { color: var(--ok); }
+.st-CAU { color: var(--cau); }
+.st-WAR { color: var(--war); }
+.st-DAN { color: var(--dan); }
+.st-OFF { color: var(--off); }
+
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 7px;
+  white-space: nowrap;
+}
+.badge-OK { background: var(--ok-bg); color: var(--ok); }
+.badge-CAU { background: var(--cau-bg); color: var(--cau); }
+.badge-WAR { background: var(--war-bg); color: var(--war); }
+.badge-DAN { background: var(--dan-bg); color: var(--dan); }
+.badge-OFF { background: var(--off-bg); color: var(--off); }
+
+.eq-card {
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--ok);
+  border-radius: 12px;
+  padding: 11px;
+  margin-bottom: 8px;
+  background: var(--surface-sub);
+  cursor: pointer;
+}
+.eq-card.CAU { border-left-color: var(--cau); }
+.eq-card.WAR { border-left-color: var(--war); }
+.eq-card.DAN { border-left-color: var(--dan); }
+.eq-card.OFF { border-left-color: var(--off); }
+.eq-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.eq-name { font-weight: 800; font-size: 14px; }
+.eq-sub { font-size: 12px; color: var(--muted); }
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+@media (min-width: 540px) { .metrics { grid-template-columns: repeat(6, 1fr); } }
+.metric {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 7px;
+}
+.metric .k { font-size: 10px; color: var(--muted); }
+.metric .v { font-size: 13px; font-weight: 800; }
+
+.eq-actions { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); gap: 6px; flex-wrap: wrap; }
+.eq-card.open .eq-actions { display: flex; }
+
+.btn {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 9px;
+  padding: 7px 11px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.btn-p { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn-ok { background: var(--ok); border-color: var(--ok); color: #fff; }
+.btn-d { border-color: var(--dan); color: var(--dan); }
+.btn-sm { padding: 5px 9px; font-size: 11px; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+input[type=text], input[type=number], select {
+  width: 100%;
+  min-height: 38px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-sub);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+.field { margin-bottom: 10px; }
+.field label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+
+.banner {
+  border-radius: 12px;
+  padding: 11px;
+  font-weight: 800;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+.banner small { display: block; font-weight: 500; font-size: 12px; margin-top: 2px; }
+.b-OK { background: var(--ok-bg); color: var(--ok); }
+.b-WAR { background: var(--war-bg); color: var(--war); }
+.b-CAU { background: var(--cau-bg); color: var(--cau); }
+.b-DAN { background: var(--dan-bg); color: var(--dan); }
+.b-OFF { background: var(--primary-bg); color: var(--primary); }
+
+.steps { list-style: none; margin: 0; padding: 0; }
+.steps li { display: flex; gap: 10px; padding: 9px 0; border-top: 1px solid var(--border); align-items: flex-start; }
+.steps li:first-child { border-top: 0; }
+.step-n {
+  width: 24px; height: 24px; border-radius: 7px;
+  background: var(--surface-sub); border: 1px solid var(--border);
+  display: grid; place-items: center; font-size: 12px; font-weight: 800; flex: none;
+}
+.steps li.done .step-n { background: var(--ok); border-color: var(--ok); color: #fff; }
+.steps li.lock { opacity: 0.45; }
+.steps b { display: block; font-size: 13px; }
+.steps span { font-size: 12px; color: var(--muted); }
+
+.insp-cat {
+  font-size: 12px; font-weight: 800; color: var(--primary);
+  background: var(--primary-bg); padding: 6px 10px; border-radius: 8px;
+  margin: 10px 0 4px; display: flex; justify-content: space-between;
+}
+.insp-cat:first-child { margin-top: 0; }
+.insp-item {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 8px; padding: 8px 2px; border-bottom: 1px solid var(--border); font-size: 13px;
+}
+.yn { display: flex; gap: 4px; flex: none; }
+.yn button {
+  border: 1px solid var(--border); background: var(--surface-sub); color: var(--muted);
+  border-radius: 7px; padding: 5px 10px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.yn button.y { background: var(--ok); border-color: var(--ok); color: #fff; }
+.yn button.n { background: var(--dan); border-color: var(--dan); color: #fff; }
+
+.cam-wrap {
+  position: relative; width: 100%; padding-top: 68%;
+  background: #0f172a; border-radius: 12px; overflow: hidden;
+}
+#tv, #tc { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+
+.log-list { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow-y: auto; }
+.log-list li { padding: 6px 0; border-top: 1px solid var(--border); display: flex; gap: 6px; font-size: 12px; align-items: flex-start; }
+.log-list li:first-child { border-top: 0; }
+
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th, td { text-align: left; padding: 7px 5px; border-top: 1px solid var(--border); }
+th { color: var(--muted); border-top: 0; }
+
+#toast {
+  position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%);
+  background: #0f172a; color: #fff; padding: 8px 16px; border-radius: 99px;
+  font-size: 12px; font-weight: 700; display: none; z-index: 60; white-space: nowrap;
+}
+#toast.show { display: block; }
+
+@media print {
+  .topbar, .nav, .no-print, #toast { display: none !important; }
+  section { display: block !important; page-break-after: always; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="title-wrap">
+      <h1>⚡ 전기설비 예방관리</h1>
+      <small><span class="mono" id="clock"></span> · 오프라인 동작</small>
+    </div>
+    <div class="top-btns no-print">
+      <button class="btn btn-sm" id="btnTheme">🌓 테마</button>
+      <button class="btn btn-sm" id="btnPrint">🖨️ 인쇄</button>
+    </div>
+  </div>
+</header>
+
+<nav class="nav no-print" id="nav">
+  <button class="on" data-tab="mon"><span>📊</span><span>설비감시</span></button>
+  <button data-tab="loto"><span>🔒</span><span>정비LOTO</span></button>
+  <button data-tab="insp"><span>📋</span><span>일상점검</span></button>
+  <button data-tab="thm"><span>🌡️</span><span>열화상</span></button>
+  <button data-tab="ref"><span>🚨</span><span>기준·대응</span></button>
+</nav>
+
+<main>
+  <!-- 1. 설비감시 -->
+  <section id="mon" class="on">
+    <div class="kpi-grid">
+      <div class="kpi"><div class="n st-OK mono" id="kOk">0</div><div class="l">정상 설비</div></div>
+      <div class="kpi"><div class="n st-CAU mono" id="kCau">0</div><div class="l">주의·경고</div></div>
+      <div class="kpi"><div class="n st-DAN mono" id="kDan">0</div><div class="l">위험·차단</div></div>
+      <div class="kpi"><div class="n st-OFF mono" id="kLoto">0</div><div class="l">LOTO 잠금</div></div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-hd">
+          <h2>설비 상태 목록</h2>
+          <div style="display:flex;gap:6px" class="no-print">
+            <button class="btn btn-sm" id="btnStep">1회 갱신</button>
+            <button class="btn btn-sm" id="btnAuto">자동갱신: 꺼짐</button>
+          </div>
+        </div>
+        <div id="eqList"></div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-hd">
+            <h2>경보 로그 <small id="logCnt"></small></h2>
+            <div style="display:flex;gap:4px" class="no-print">
+              <button class="btn btn-sm" id="btnCsv">CSV</button>
+              <button class="btn btn-sm btn-d" id="btnClearLog">지우기</button>
+            </div>
+          </div>
+          <ul class="log-list" id="logList"></ul>
+        </div>
+
+        <div class="card no-print">
+          <div class="card-hd"><h2>설비 편집·추가</h2><small>자동 저장</small></div>
+          <div id="mgr"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
+            <input type="text" id="mNm" placeholder="설비명">
+            <input type="text" id="mZn" placeholder="구역">
+            <select id="mV">
+              <option value="220">220V</option>
+              <option value="380" selected>380V</option>
+              <option value="22900">22.9kV</option>
+            </select>
+            <button class="btn btn-p" id="mAdd">+ 추가</button>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn btn-sm" id="btnJson">백업 저장</button>
+            <label class="btn btn-sm" style="cursor:pointer">백업 복원<input type="file" id="fJson" accept=".json" hidden></label>
+            <button class="btn btn-sm btn-d" id="btnResetAll">초기화</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 정비 LOTO -->
+  <section id="loto">
+    <div class="two-col two-even">
+      <div class="card">
+        <div class="card-hd"><h2>잠금·표지(LOTO) 10단계</h2></div>
+        <div class="field"><label>정비 설비</label><select id="lEq"></select></div>
+        <div class="field"><label>작업자 (쉼표 구분)</label><input type="text" id="lWorkers" value="김정비, 이전기"></div>
+        <div id="lotoBanner"></div>
+        <ol class="steps" id="steps"></ol>
+        <button class="btn btn-d no-print" id="lReset" style="width:100%;margin-top:10px">절차 초기화</button>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-hd"><h2>접근한계거리 확인</h2><small>산안법 제321조</small></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="field"><label>전압 (kV)</label><input type="number" id="kv" value="22.9" step="0.1" min="0"></div>
+            <div class="field"><label>거리 (cm)</label><input type="number" id="dist" value="80" min="0"></div>
+          </div>
+          <div id="distOut"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>잠금 중 설비</h2></div>
+          <div id="lockList"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>LOTO 완료 이력</h2></div>
+          <div id="lotoHist"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 일상점검 -->
+  <section id="insp">
+    <div class="card">
+      <div class="card-hd">
+        <div><h2>일상점검 체크리스트</h2><small id="inspDate"></small></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" class="no-print">
+          <button class="btn btn-sm btn-ok" id="btnAllOk">전체 양호</button>
+          <button class="btn btn-sm btn-p" id="btnSaveInsp">마감 저장</button>
+          <button class="btn btn-sm btn-d" id="btnClrInsp">초기화</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="mono" id="inspScore" style="font-size:32px;font-weight:900">-</div>
+        <div id="inspSum" style="font-size:13px"></div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card"><div id="inspList"></div></div>
+      <div class="card">
+        <div class="card-hd"><h2>일일 점검 마감 이력</h2></div>
+        <div id="inspHist"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. 열화상 -->
+  <section id="thm">
+    <div class="two-col two-even">
+      <div class="card">
+        <div class="card-hd"><h2>열화상 이미지·카메라 분석</h2></div>
+        <div class="cam-wrap">
+          <video id="tv" playsinline webkit-playsinline muted autoplay></video>
+          <canvas id="tc" width="160" height="120"></canvas>
+        </div>
+        <div id="thMsg" style="font-size:12px;color:var(--war);margin-top:6px"></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px" class="no-print">
+          <button class="btn btn-sm btn-p" id="thStart">카메라 켜기</button>
+          <button class="btn btn-sm" id="thFreeze">정지</button>
+          <button class="btn btn-sm" id="thStop">끄기</button>
+          <label class="btn btn-sm btn-p" style="cursor:pointer">📷 촬영<input type="file" id="thCap" accept="image/*" capture="environment" hidden></label>
+          <label class="btn btn-sm" style="cursor:pointer">🖼️ 사진 선택<input type="file" id="thFile" accept="image/*" hidden></label>
+        </div>
+        <div class="field no-print" style="margin-top:10px">
+          <label>카메라 장치</label>
+          <select id="thCam"><option value="">카메라 시작 후 선택 가능</option></select>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-hd"><h2>온도 설정 및 과열 판정</h2></div>
+          <div class="field">
+            <label>분석 모드</label>
+            <select id="thMode">
+              <option value="real">열화상 이미지 (눈금 온도 환산)</option>
+              <option value="demo" selected>일반 카메라 (시연용 의사색상)</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+            <div class="field"><label>최저 ℃</label><input type="number" id="thMin" value="20"></div>
+            <div class="field"><label>최고 ℃</label><input type="number" id="thMax" value="120"></div>
+            <div class="field"><label>주변 ℃</label><input type="number" id="thAmb" value="25"></div>
+          </div>
+          <div id="thOut"></div>
+          <div class="field" style="margin-top:10px"><label>반영 설비</label><select id="thEq"></select></div>
+          <button class="btn btn-p" id="thSave" disabled style="width:100%">측정 결과 저장 및 설비 반영</button>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>열화상 저장 기록</h2></div>
+          <div id="thSaved"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. 기준·대응 -->
+  <section id="ref">
+    <div class="two-col two-even">
+      <div class="card">
+        <div class="card-hd"><h2>감전 재해 응급조치</h2></div>
+        <div class="banner b-DAN">1. 전원 차단 및 절연 분리<small>맨손 접촉 금지 · 차단기 개방 후 절연봉 등으로 분리</small></div>
+        <div class="banner b-WAR">2. 119 신고 및 사내 전파<small>즉시 119 신고 및 안전관리자 호출 · 의식·호흡 확인</small></div>
+        <div class="banner b-CAU">3. 심폐소생술(CPR) 및 AED<small>호흡 없으면 즉시 가슴압박 및 자동심장충격기 시행</small></div>
+        <div class="banner b-OFF">4. 화상 보호 및 병원 이송<small>화상 부위 거즈 보호 후 병원 이송</small></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><h2>경보 기준표</h2></div>
+        <table>
+          <tr><th>항목</th><th>주의</th><th>경고</th><th>위험</th></tr>
+          <tr><td>누설전류</td><td class="mono">10mA</td><td class="mono">15mA</td><td class="mono">30mA</td></tr>
+          <tr><td>절연저항</td><td class="mono">&lt;5MΩ</td><td class="mono">&lt;2MΩ</td><td class="mono">&lt;1MΩ</td></tr>
+          <tr><td>단자 ΔT</td><td class="mono">10℃</td><td class="mono">20℃</td><td class="mono">40℃</td></tr>
+          <tr><td>부하율</td><td class="mono">80%</td><td class="mono">95%</td><td class="mono">110%</td></tr>
+          <tr><td>습도</td><td class="mono">75%</td><td class="mono">85%</td><td class="mono">누수시 위험</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="toast"></div>
+
+<script>
+(function() {
+  const T = { leak: [10, 15, 30], ins: [5, 2, 1], dT: [10, 20, 40], load: [80, 95, 110], hum: [75, 85] };
+  const LVR = { OK: 0, CAU: 1, WAR: 2, DAN: 3, OFF: -1 };
+  const LVN = { OK: "정상", CAU: "주의", WAR: "경고", DAN: "위험", OFF: "LOTO 잠금" };
+  const ACT = {
+    DAN: "자동 차단 · 접근 금지 · 긴급 출동",
+    WAR: "정비 단축 · 부하 분산 및 정밀 점검",
+    CAU: "추이 관찰 · 정기점검 시 재확인"
+  };
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const hhmm = () => new Date().toTimeString().slice(0, 8);
+  const todayStr = () => new Date().toISOString().slice(0, 10);
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+
+  let toastTimer = null;
+  function toast(msg) {
+    const el = $("toast");
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+  }
+
+  const memStore = {};
+  function getStore(k) {
+    try { return window.localStorage.getItem(k); } catch (e) { return memStore[k] || null; }
+  }
+  function setStore(k, v) {
+    try { window.localStorage.setItem(k, v); } catch (e) { memStore[k] = v; }
+  }
+  function delStore(k) {
+    try { window.localStorage.removeItem(k); } catch (e) { delete memStore[k]; }
+  }
+
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    setStore("elec-theme-v5", t);
+  }
+  applyTheme(getStore("elec-theme-v5") || "light");
+  $("btnTheme").onclick = () => {
+    const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    toast(next === "dark" ? "다크 모드" : "라이트 모드");
+  };
+  $("btnPrint").onclick = () => window.print();
+
+  $("nav").addEventListener("click", ev => {
+    const b = ev.target.closest("button[data-tab]");
+    if (!b) return;
+    document.querySelectorAll("#nav button").forEach(x => x.classList.toggle("on", x === b));
+    document.querySelectorAll("section").forEach(s => s.classList.toggle("on", s.id === b.dataset.tab));
+    if (b.dataset.tab !== "thm") thStop();
+    if (b.dataset.tab === "loto") renderLoto();
+    window.scrollTo(0, 0);
+  });
+
+  const EQ = [
+    { id: "MSB-1", name: "수배전반 (22.9kV 수전)", zone: "전기실", v: 22900, s: { leak: 2, ins: 120, dT: 4, load: 62, hum: 45 } },
+    { id: "CV-DP", name: "컨베이어 분전반", zone: "입고 1층", v: 380, s: { leak: 4, ins: 60, dT: 6, load: 71, hum: 55 } },
+    { id: "SORT", name: "자동 소터 제어반", zone: "분류 라인", v: 380, s: { leak: 5, ins: 40, dT: 8, load: 76, hum: 50 } },
+    { id: "ASRS", name: "자동창고 스태커크레인", zone: "랙 구역", v: 380, s: { leak: 3, ins: 35, dT: 5, load: 58, hum: 48 } },
+    { id: "CHG", name: "지게차 충전기 (6대)", zone: "충전구역", v: 220, s: { leak: 8, ins: 12, dT: 9, load: 84, hum: 60 }, drift: { leak: 0.4 } },
+    { id: "DP-F", name: "냉동창고 분전반", zone: "냉동 -25℃", v: 380, s: { leak: 6, ins: 8, dT: 7, load: 68, hum: 78 }, drift: { ins: -0.35, hum: 0.4 } }
+  ];
+  const ORIG = {};
+  EQ.forEach(e => {
+    e.base = { ...e.s };
+    e.arc = false; e.water = false; e.lock = null; e.prev = "OK";
+    ORIG[e.id] = { ...e.base };
+  });
+  ORIG["CHG"].leak = 5; ORIG["CHG"].ins = 40;
+  ORIG["DP-F"].ins = 40; ORIG["DP-F"].hum = 55;
+
+  function evalEq(e) {
+    if (e.lock) return { lv: "OFF", iss: [{ l: "OFF", m: "LOTO 잠금 중" }] };
+    const s = e.s, iss = [];
+    let lv = "OK";
+    const up = (l, m) => { iss.push({ l, m }); if (LVR[l] > LVR[lv]) lv = l; };
+    const hi = (x, t, name, unit) => {
+      if (x >= t[2]) up("DAN", `${name} ${x.toFixed(1)}${unit}`);
+      else if (x >= t[1]) up("WAR", `${name} ${x.toFixed(1)}${unit}`);
+      else if (x >= t[0]) up("CAU", `${name} ${x.toFixed(1)}${unit}`);
+    };
+    hi(s.leak, T.leak, "누설전류", "mA");
+    if (s.ins < T.ins[2]) up("DAN", `절연저항 ${s.ins.toFixed(1)}MΩ`);
+    else if (s.ins < T.ins[1]) up("WAR", `절연저항 ${s.ins.toFixed(1)}MΩ`);
+    else if (s.ins < T.ins[0]) up("CAU", `절연저항 ${s.ins.toFixed(1)}MΩ`);
+    hi(s.dT, T.dT, "단자 온도상승", "℃");
+    hi(s.load, T.load, "부하율", "%");
+    if (e.water) up("DAN", "누수 감지");
+    else if (s.hum >= T.hum[1]) up("WAR", `습도 ${s.hum.toFixed(0)}%`);
+    else if (s.hum >= T.hum[0]) up("CAU", `습도 ${s.hum.toFixed(0)}%`);
+    if (e.arc) up("DAN", "아크 감지");
+    return { lv, iss };
+  }
+
+  const log = [];
+  function addLog(lv, msg) {
+    log.unshift({ dt: todayStr(), t: hhmm(), lv, msg });
+    if (log.length > 80) log.pop();
+  }
+
+  let openId = null;
+  function renderMon() {
+    const cnt = { OK: 0, CAU: 0, DAN: 0, OFF: 0 };
+    $("eqList").innerHTML = EQ.map(e => {
+      const r = evalEq(e);
+      cnt[r.lv === "WAR" ? "CAU" : r.lv]++;
+      const s = e.s;
+      const cls = (v, t, inv) => {
+        const lv = inv ? (v < t[2] ? "DAN" : v < t[1] ? "WAR" : v < t[0] ? "CAU" : "OK") : (v >= t[2] ? "DAN" : v >= t[1] ? "WAR" : v >= t[0] ? "CAU" : "OK");
+        return "st-" + lv;
+      };
+      const cell = (k, v, c) => `<div class="metric"><div class="k">${k}</div><div class="v mono ${c}">${v}</div></div>`;
+      return `<div class="eq-card ${r.lv} ${openId === e.id ? "open" : ""}" data-eq="${e.id}">
+        <div class="eq-top">
+          <div>
+            <div class="eq-name">${esc(e.name)}</div>
+            <div class="eq-sub">${e.id} · ${esc(e.zone)} · ${e.v >= 1000 ? (e.v / 1000) + "kV" : e.v + "V"}</div>
+          </div>
+          <span class="badge badge-${r.lv}">${LVN[r.lv]}</span>
+        </div>
+        ${e.lock
+          ? `<div style="margin-top:6px">${e.lock.map(w => `<span class="badge badge-OFF" style="margin-right:4px">🔒 ${esc(w)}</span>`).join("")}</div>`
+          : `<div class="metrics">
+              ${cell("누설전류", s.leak.toFixed(1) + "mA", cls(s.leak, T.leak))}
+              ${cell("절연저항", s.ins.toFixed(1) + "MΩ", cls(s.ins, T.ins, true))}
+              ${cell("단자 ΔT", s.dT.toFixed(0) + "℃", cls(s.dT, T.dT))}
+              ${cell("부하율", s.load.toFixed(0) + "%", cls(s.load, T.load))}
+              ${cell("습도", s.hum.toFixed(0) + "%", e.water ? "st-DAN" : s.hum >= 85 ? "st-WAR" : s.hum >= 75 ? "st-CAU" : "st-OK")}
+              ${cell("아크", e.arc ? "감지" : "없음", e.arc ? "st-DAN" : "st-OK")}
+            </div>`
+        }
+        ${r.lv !== "OK" && r.lv !== "OFF"
+          ? `<div style="margin-top:6px;font-size:12px;font-weight:700" class="st-${r.lv}">⚠ ${r.iss.map(i => esc(i.m)).join(", ")} → ${ACT[r.lv]}</div>`
+          : ""
+        }
+        <div class="eq-actions" onclick="event.stopPropagation()">
+          ${e.lock ? "" : `
+            <button class="btn btn-sm" data-f="leak">누전</button>
+            <button class="btn btn-sm" data-f="heat">과열</button>
+            <button class="btn btn-sm" data-f="water">침수</button>
+            <button class="btn btn-sm" data-f="arc">아크</button>
+          `}
+          <button class="btn btn-sm btn-ok" data-f="gotoLoto">LOTO</button>
+          <button class="btn btn-sm btn-p" data-f="fix">복구</button>
+        </div>
+      </div>`;
+    }).join("");
+
+    $("kOk").textContent = cnt.OK;
+    $("kCau").textContent = cnt.CAU;
+    $("kDan").textContent = cnt.DAN;
+    $("kLoto").textContent = cnt.OFF;
+    $("logCnt").textContent = log.length ? log.length + "건" : "";
+    $("logList").innerHTML = log.length
+      ? log.map(l => `<li><span class="mono" style="color:var(--muted);font-size:11px">${l.t}</span><span class="badge badge-${l.lv}">${LVN[l.lv]}</span><span>${esc(l.msg)}</span></li>`).join("")
+      : `<li style="color:var(--muted)">경보 기록 없음</li>`;
+  }
+
+  function step() {
+    EQ.forEach(e => {
+      if (!e.lock) {
+        const s = e.s, b = e.base, d = e.drift || {};
+        s.leak = clamp(s.leak + (b.leak - s.leak) * 0.15 + rnd(-0.5, 0.5) + (d.leak || 0), 0, 80);
+        s.ins = clamp(s.ins + (b.ins - s.ins) * 0.15 + rnd(-1, 1) * s.ins * 0.03 + (d.ins || 0), 0.1, 200);
+        s.dT = clamp(s.dT + (b.dT - s.dT) * 0.15 + rnd(-0.7, 0.7), 0, 90);
+        s.load = clamp(s.load + (b.load - s.load) * 0.2 + rnd(-2.5, 2.5), 0, 140);
+        s.hum = clamp(s.hum + (b.hum - s.hum) * 0.1 + rnd(-0.8, 0.8) + (d.hum || 0), 20, 99);
+        if (d.leak) b.leak = clamp(b.leak + d.leak, 0, 60);
+        if (d.ins) b.ins = clamp(b.ins + d.ins, 0.3, 200);
+        if (d.hum) b.hum = clamp(b.hum + d.hum, 20, 95);
+      }
+      const r = evalEq(e);
+      if (r.lv !== e.prev && LVR[r.lv] > LVR[e.prev]) {
+        addLog(r.lv, `${e.name}: ${r.iss.filter(i => i.l === r.lv).map(i => i.m).join(", ")}`);
+      }
+      e.prev = r.lv;
+    });
+    renderMon();
+  }
+
+  let autoTimer = null;
+  $("btnStep").onclick = () => { step(); save(); };
+  $("btnAuto").onclick = () => {
+    if (autoTimer) {
+      clearInterval(autoTimer); autoTimer = null;
+      $("btnAuto").textContent = "자동갱신: 꺼짐";
+      toast("자동갱신 중지");
+    } else {
+      autoTimer = setInterval(() => { step(); save(); }, 3000);
+      $("btnAuto").textContent = "자동갱신: 켜짐";
+      toast("3초 간격 자동갱신 시작");
+    }
+  };
+
+  $("eqList").addEventListener("click", ev => {
+    const card = ev.target.closest("[data-eq]");
+    if (!card) return;
+    const e = EQ.find(x => x.id === card.dataset.eq);
+    const b = ev.target.closest("[data-f]");
+    if (!b) {
+      openId = openId === e.id ? null : e.id;
+      renderMon();
+      return;
+    }
+    const f = b.dataset.f;
+    if (f === "gotoLoto") {
+      if (lt.done > 4 && lt.done < 10 && lt.eq !== e.id) { toast("다른 설비 LOTO 진행 중"); return; }
+      lt = { eq: e.id, done: 0, err: "" };
+      $("lEq").value = e.id;
+      document.querySelector('#nav button[data-tab="loto"]').click();
+      return;
+    }
+    if (f === "leak") { e.base.leak = 34; e.s.leak = 34; }
+    if (f === "heat") { e.base.dT = 45; e.s.dT = 45; e.base.load = 112; e.s.load = 112; }
+    if (f === "water") { e.water = true; e.base.ins = 0.6; e.s.ins = 0.6; }
+    if (f === "arc") { e.arc = true; }
+    if (f === "fix") {
+      const o = ORIG[e.id] || { leak: 2, ins: 100, dT: 5, load: 50, hum: 50 };
+      e.base = { ...o }; e.s = { ...o }; e.arc = false; e.water = false; e.drift = null;
+      addLog("OK", `${e.name}: 정상 복구`);
+    }
+    step(); save();
+  });
+
+  $("btnCsv").onclick = () => {
+    if (!log.length) { toast("경보 로그가 없습니다"); return; }
+    const rows = [["날짜", "시각", "등급", "내용"], ...log.map(l => [l.dt || todayStr(), l.t, LVN[l.lv], `"${l.msg.replace(/"/g, '""')}"`])];
+    const blob = new Blob(["\uFEFF" + rows.map(r => r.join(",")).join("\r\n")], { type: "text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `경보기록_${todayStr()}.csv`;
+    a.click();
+  };
+  $("btnClearLog").onclick = () => { log.length = 0; renderMon(); save(); };
+
+  const STEPS = [
+    ["작업 계획·허가", "작업 범위, 차단 계통, 작업자 확정 및 승인"],
+    ["관계자 통보", "현장 작업자 및 운전원에게 정지 통보"],
+    ["설비 정상 정지", "정상 정지 절차로 가동 중지"],
+    ["주전원·제어전원 차단", "차단기·단로기 개방 및 전원 분리"],
+    ["잠금(Lock)·표지(Tag)", "작업자 개인 자물쇠 및 조작금지 표지 부착"],
+    ["잔류 에너지 제거", "콘덴서 방전, 잔압 제거, 기계적 고정"],
+    ["무전압 확인", "검전기로 무전압 확인 및 기동 불가 확인"],
+    ["단락 접지 설치", "고압 설비 단락접지기구 체결"],
+    ["정비 작업 실시", "잠금 상태 유지하며 정비"],
+    ["통전 복구", "공구 회수·접지 제거·자물쇠 해제 후 투입"]
+  ];
+  let lt = { eq: null, done: 0, err: "" }, lotoHist = [];
+
+  function renderLoto() {
+    const e = EQ.find(x => x.id === lt.eq) || EQ[0];
+    lt.eq = e.id;
+    const ws = $("lWorkers").value.split(",").map(s => s.trim()).filter(Boolean);
+    let ban;
+    if (lt.done === STEPS.length) ban = `<div class="banner b-OK">✓ 통전 복구 완료<small>${esc(e.name)}</small></div>`;
+    else if (lt.done >= 5 && lt.done < 9) ban = `<div class="banner b-OFF">🔒 LOTO 잠금 중<small>작업자: ${ws.map(esc).join(", ") || "미입력"}</small></div>`;
+    else if (lt.done === 9) ban = `<div class="banner b-OK">🔧 정비 가능 상태<small>차단·잠금·검전 완료</small></div>`;
+    else ban = `<div class="banner b-WAR">⚡ 활선(충전) 상태<small>잔여 ${STEPS.length - lt.done}단계</small></div>`;
+    $("lotoBanner").innerHTML = ban;
+
+    $("steps").innerHTML = STEPS.map(([t, d], i) => {
+      const cls = i < lt.done ? "done" : i > lt.done ? "lock" : "";
+      const btn = i === lt.done ? `<button class="btn btn-sm btn-p" data-step="${i}">완료</button>` : "";
+      const skip = i === 7 && e.v < 1000 ? " (저압 생략 가능)" : "";
+      return `<li class="steps li ${cls}">
+        <div class="step-n">${i < lt.done ? "✓" : i + 1}</div>
+        <div style="flex:1"><b>${t}${skip}</b><span>${d}</span>
+          ${i === lt.done && lt.err ? `<div style="color:var(--dan);font-size:12px;font-weight:700">${esc(lt.err)}</div>` : ""}
+        </div>${btn}
+      </li>`;
+    }).join("");
+
+    $("lockList").innerHTML = EQ.filter(x => x.lock).map(x => `
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--border)">
+        <span><b>${esc(x.name)}</b> <small style="color:var(--muted)">(${esc(x.zone)})</small></span>
+        <span>${x.lock.map(w => `<span class="badge badge-OFF">🔒 ${esc(w)}</span>`).join(" ")}</span>
+      </div>`).join("") || `<div style="color:var(--muted);font-size:12px">잠금 중 설비 없음</div>`;
+
+    $("lotoHist").innerHTML = lotoHist.length
+      ? `<table><tr><th>일시</th><th>설비</th><th>작업자</th></tr>${lotoHist.slice(0, 8).map(h => `<tr><td class="mono">${h.dt} ${h.t}</td><td>${esc(h.name)}</td><td>${esc(h.workers)}</td></tr>`).join("")}</table>`
+      : `<div style="color:var(--muted);font-size:12px">완료 이력 없음</div>`;
+  }
+
+  $("steps").addEventListener("click", ev => {
+    const b = ev.target.closest("[data-step]"); if (!b) return;
+    const i = +b.dataset.step;
+    const e = EQ.find(x => x.id === lt.eq);
+    const ws = $("lWorkers").value.split(",").map(s => s.trim()).filter(Boolean);
+    lt.err = "";
+    if (i === 4) {
+      if (!ws.length) { lt.err = "작업자를 입력하세요."; renderLoto(); return; }
+      e.lock = ws;
+      addLog("OFF", `${e.name}: LOTO 잠금 (${ws.join(", ")})`);
+    }
+    if (i === 6 && !e.lock) { lt.err = "잠금 미설정 상태입니다."; renderLoto(); return; }
+    if (i === 9) {
+      addLog("OK", `${e.name}: 통전 복구`);
+      lotoHist.unshift({ dt: todayStr(), t: hhmm(), name: e.name, workers: (e.lock || ws).join(", ") });
+      if (lotoHist.length > 20) lotoHist.pop();
+      e.lock = null;
+    }
+    lt.done = i + 1;
+    renderLoto(); renderMon(); save();
+  });
+
+  $("lEq").onchange = () => {
+    if (lt.done > 4 && lt.done < 10) {
+      $("lEq").value = lt.eq;
+      lt.err = "잠금 진행 중인 설비가 있습니다.";
+      renderLoto(); return;
+    }
+    lt = { eq: $("lEq").value, done: 0, err: "" };
+    renderLoto();
+  };
+  $("lWorkers").oninput = renderLoto;
+  $("lReset").onclick = () => {
+    const e = EQ.find(x => x.id === lt.eq);
+    if (e && e.lock) { addLog("CAU", `${e.name}: LOTO 취소`); e.lock = null; }
+    lt = { eq: lt.eq, done: 0, err: "" };
+    renderLoto(); renderMon(); save();
+  };
+
+  const LIMITS = [[0.3, 0], [0.75, 30], [2, 45], [15, 60], [37, 90], [88, 110], [121, 130], [145, 150], [169, 170], [242, 230], [362, 380], [550, 550], [800, 790]];
+  function renderDist() {
+    const kv = +$("kv").value, d = +$("dist").value;
+    if (kv <= 0.3) { $("distOut").innerHTML = `<div class="banner b-CAU">0.3kV 이하 저압<small>직접 접촉 금지 · 절연보호구 착용</small></div>`; return; }
+    let lim = null;
+    for (const [u, c] of LIMITS) { if (kv <= u) { lim = c; break; } }
+    if (lim === null) { $("distOut").innerHTML = `<div class="banner b-DAN">800kV 초과<small>별도 검토 필요</small></div>`; return; }
+    const ok = d >= lim;
+    $("distOut").innerHTML = `<div class="banner ${ok ? "b-OK" : "b-DAN"}">${ok ? "✓ 안전거리 확보" : "✕ 접근 금지"}<small>기준 ${lim}cm · 현재 ${d}cm</small></div>`;
+  }
+  $("kv").oninput = renderDist;
+  $("dist").oninput = renderDist;
+
+  const INSP = {
+    "분전반·수배전반": ["문 잠금 및 경고표지 부착", "누전차단기 시험버튼 작동", "충전부 노출·커버 탈락 없음", "전면 1m 이내 장애물 없음"],
+    "컨베이어·소터": ["비상정지 스위치 정상 작동", "방호문 인터록 정상 작동", "제어반 분진·습기 없음", "급전 커버 파손 없음"],
+    "충전구역·냉동창고": ["충전기 접지 양호 및 환기 가동", "충전 케이블·커넥터 과열 없음", "결로·성에 및 누수 없음", "문어발 배선·피복 손상 없음"]
+  };
+  const insp = {};
+  let inspHist = [];
+
+  function renderInsp() {
+    let y = 0, n = 0, tot = 0;
+    $("inspList").innerHTML = Object.entries(INSP).map(([z, items]) => {
+      tot += items.length;
+      return `<div class="insp-cat"><span>${z}</span><span>${items.length}항목</span></div>` + items.map((t, i) => {
+        const k = z + i, v = insp[k];
+        if (v === "y") y++; else if (v === "n") n++;
+        return `<div class="insp-item"><span>${t}</span><div class="yn">
+          <button class="${v === "y" ? "y" : ""}" data-k="${k}" data-v="y">양호</button>
+          <button class="${v === "n" ? "n" : ""}" data-k="${k}" data-v="n">불량</button>
+        </div></div>`;
+      }).join("");
+    }).join("");
+    const done = y + n;
+    $("inspScore").textContent = done ? Math.round(y / done * 100) + "점" : "-";
+    $("inspSum").textContent = `총 ${tot}항목 중 ${done}점검 (양호 ${y}, 불량 ${n})`;
+    $("inspHist").innerHTML = inspHist.length
+      ? `<table><tr><th>날짜</th><th>점수</th><th>불량</th></tr>${inspHist.slice(0, 8).map(h => `<tr><td class="mono">${h.dt}</td><td class="mono">${h.score}점</td><td class="mono">${h.bad}건</td></tr>`).join("")}</table>`
+      : `<div style="color:var(--muted);font-size:12px">마감 이력 없음</div>`;
+  }
+
+  $("inspList").addEventListener("click", ev => {
+    const b = ev.target.closest("[data-k]"); if (!b) return;
+    insp[b.dataset.k] = insp[b.dataset.k] === b.dataset.v ? undefined : b.dataset.v;
+    renderInsp(); save();
+  });
+  $("btnAllOk").onclick = () => {
+    Object.entries(INSP).forEach(([z, items]) => items.forEach((_, i) => { if (!insp[z + i]) insp[z + i] = "y"; }));
+    renderInsp(); save();
+  };
+  $("btnClrInsp").onclick = () => { Object.keys(insp).forEach(k => delete insp[k]); renderInsp(); save(); };
+  $("btnSaveInsp").onclick = () => {
+    let y = 0, n = 0;
+    Object.entries(INSP).forEach(([z, items]) => items.forEach((_, i) => {
+      if (insp[z + i] === "y") y++; else if (insp[z + i] === "n") n++;
+    }));
+    if (!(y + n)) { toast("점검 항목이 없습니다"); return; }
+    const score = Math.round(y / (y + n) * 100);
+    inspHist.unshift({ dt: todayStr(), score, bad: n });
+    addLog(n ? "WAR" : "OK", `일상점검 마감 ${score}점 (불량 ${n}건)`);
+    renderInsp(); renderMon(); save(); toast("일상점검 저장 완료");
+  };
+
+  const TH = { src: null, img: null, timer: null, frozen: false, last: null, saved: [] };
+  const tv = $("tv"), tc = $("tc"), tx = tc.getContext("2d", { willReadFrequently: true });
+  const PAL = [[0, [8, 0, 28]], [.25, [96, 0, 150]], [.5, [224, 48, 40]], [.75, [255, 176, 0]], [1, [255, 255, 232]]];
+  function heat(t) {
+    t = clamp(t, 0, 1);
+    for (let i = 1; i < PAL.length; i++) {
+      if (t <= PAL[i][0]) {
+        const a = PAL[i - 1], c = PAL[i], k = (t - a[0]) / (c[0] - a[0]);
+        return a[1].map((v, j) => v + (c[1][j] - v) * k);
+      }
+    }
+    return PAL[4][1];
+  }
+  const thLevel = d => d >= T.dT[2] ? "DAN" : d >= T.dT[1] ? "WAR" : d >= T.dT[0] ? "CAU" : "OK";
+
+  function thLoop() {
+    if (TH.frozen) return;
+    const s = TH.src === "img" ? TH.img : tv;
+    if (!s || (TH.src === "video" && tv.readyState < 2)) return;
+    const W = tc.width, H = tc.height;
+    tx.drawImage(s, 0, 0, W, H);
+    const im = tx.getImageData(0, 0, W, H), p = im.data, n = W * H, L = new Float32Array(n);
+    let mx = -1, mi = 0, mn = 2, sum = 0;
+    for (let i = 0; i < n; i++) {
+      const l = (.299 * p[i * 4] + .587 * p[i * 4 + 1] + .114 * p[i * 4 + 2]) / 255;
+      L[i] = l; sum += l;
+      if (l > mx) { mx = l; mi = i; }
+      if (l < mn) mn = l;
+    }
+    if (mx <= 0 && sum === 0) { tx.clearRect(0, 0, W, H); return; }
+    const demo = $("thMode").value === "demo";
+    if (demo) {
+      const r = mx - mn || 1;
+      for (let i = 0; i < n; i++) {
+        const c = heat((L[i] - mn) / r);
+        p[i * 4] = c[0]; p[i * 4 + 1] = c[1]; p[i * 4 + 2] = c[2];
+      }
+    }
+    tx.putImageData(im, 0, 0);
+    const hx = mi % W, hy = (mi / W) | 0;
+    tx.strokeStyle = "#fff"; tx.beginPath(); tx.arc(hx, hy, 5, 0, 7); tx.stroke();
+    const lo = +$("thMin").value, hi = +$("thMax").value;
+    TH.last = { demo, max: lo + mx * (hi - lo), amb: +$("thAmb").value };
+    thOut();
+  }
+
+  function thOut() {
+    const r = TH.last, o = $("thOut");
+    if (!r) { o.innerHTML = `<div style="color:var(--muted);font-size:12px">사진을 불러오거나 카메라를 켜세요.</div>`; $("thSave").disabled = true; return; }
+    if (r.demo) { o.innerHTML = `<div class="banner b-CAU">시연용 의사색상<small>온도 저장 시 상단 모드를 열화상 이미지로 변경하세요.</small></div>`; $("thSave").disabled = true; return; }
+    const d = r.max - r.amb, lv = thLevel(d);
+    o.innerHTML = `<div class="banner b-${lv}">${LVN[lv]} · ΔT ${d.toFixed(1)}℃<small>최고 ${r.max.toFixed(1)}℃ / 주변 ${r.amb.toFixed(1)}℃</small></div>`;
+    $("thSave").disabled = false;
+  }
+
+  function thStop() { clearInterval(TH.timer); if (tv.srcObject) { tv.srcObject.getTracks().forEach(t => t.stop()); tv.srcObject = null; } }
+  async function thStart(id) {
+    thStop(); TH.frozen = false;
+    try {
+      const md = navigator.mediaDevices;
+      const st = await md.getUserMedia({ video: id ? { deviceId: { exact: id } } : { facingMode: "environment" }, audio: false });
+      tv.srcObject = st; await tv.play(); TH.src = "video"; $("thMsg").textContent = "";
+      TH.timer = setInterval(thLoop, 250);
+    } catch (e) { $("thMsg").textContent = "카메라 접근 불가 — '촬영' 또는 '사진 선택'을 사용하세요."; }
+  }
+  $("thStart").onclick = () => thStart();
+  $("thStop").onclick = thStop;
+  $("thFreeze").onclick = () => { TH.frozen = !TH.frozen; };
+  $("thMode").onchange = () => { TH.last = null; thOut(); if (TH.src === "img") { TH.frozen = false; thLoop(); } };
+  function thFile(e) {
+    const f = e.target.files[0]; if (!f) return;
+    thStop();
+    const fr = new FileReader();
+    fr.onload = () => { const im = new Image(); im.onload = () => { TH.img = im; TH.src = "img"; TH.frozen = false; $("thMsg").textContent = ""; thLoop(); }; im.src = fr.result; };
+    fr.readAsDataURL(f); e.target.value = "";
+  }
+  $("thFile").onchange = thFile; $("thCap").onchange = thFile;
+
+  function renderSaved() {
+    $("thSaved").innerHTML = TH.saved.length
+      ? `<table><tr><th>시각</th><th>설비</th><th>ΔT</th><th>판정</th></tr>${TH.saved.slice(0, 8).map(s => `<tr><td class="mono">${s.t}</td><td>${esc(s.id)}</td><td class="mono">${s.d.toFixed(1)}℃</td><td><span class="badge badge-${s.lv}">${LVN[s.lv]}</span></td></tr>`).join("")}</table>`
+      : `<div style="color:var(--muted);font-size:12px">저장 기록 없음</div>`;
+  }
+  $("thSave").onclick = () => {
+    const r = TH.last; if (!r || r.demo) return;
+    const e = EQ.find(x => x.id === $("thEq").value);
+    const d = r.max - r.amb, lv = thLevel(d);
+    TH.saved.unshift({ dt: todayStr(), t: hhmm(), id: e.id, max: r.max, d, lv });
+    addLog(lv, `${e.name}: 열화상 ΔT ${d.toFixed(1)}℃`);
+    if (!e.lock) e.base.dT = e.s.dT = clamp(d, 0, 90);
+    renderMon(); renderSaved(); save(); toast("열화상 결과 반영 완료");
+  };
+
+  function refreshEq() {
+    const a = lt.eq, b = $("thEq").value || "CV-DP";
+    const opt = e => `<option value="${e.id}">${esc(e.name)} (${e.id})</option>`;
+    $("lEq").innerHTML = $("thEq").innerHTML = EQ.map(opt).join("");
+    $("lEq").value = EQ.some(e => e.id === a) ? a : EQ[0].id; lt.eq = $("lEq").value;
+    $("thEq").value = EQ.some(e => e.id === b) ? b : EQ[0].id;
+  }
+
+  function renderMgr() {
+    $("mgr").innerHTML = EQ.map(e => `
+      <div style="display:grid;grid-template-columns:1.2fr 1fr auto;gap:4px;margin-bottom:6px">
+        <input type="text" data-n="${e.id}" value="${esc(e.name)}" style="min-height:34px;font-size:12px">
+        <input type="text" data-z="${e.id}" value="${esc(e.zone)}" style="min-height:34px;font-size:12px">
+        <button class="btn btn-sm btn-d" data-del="${e.id}">삭제</button>
+      </div>`).join("");
+  }
+
+  $("mgr").addEventListener("input", ev => {
+    const t = ev.target, e = EQ.find(x => x.id === (t.dataset.n || t.dataset.z));
+    if (!e) return;
+    if (t.dataset.n) e.name = t.value.trim() || e.id; else e.zone = t.value;
+    refreshEq(); renderLoto(); renderMon(); save();
+  });
+
+  $("mgr").addEventListener("click", ev => {
+    const b = ev.target.closest("[data-del]"); if (!b) return;
+    const e = EQ.find(x => x.id === b.dataset.del);
+    if (!e || EQ.length < 2) { toast("최소 1개 설비 필요"); return; }
+    if (e.lock) { toast("잠금 중 설비 삭제 불가"); return; }
+    EQ.splice(EQ.indexOf(e), 1); delete ORIG[e.id];
+    if (openId === e.id) openId = null;
+    if (lt.eq === e.id) lt = { eq: EQ[0].id, done: 0, err: "" };
+    refreshEq(); renderMgr(); renderLoto(); renderMon(); save();
+  });
+
+  $("mAdd").onclick = () => {
+    const n = $("mNm").value.trim();
+    if (!n) { toast("설비명을 입력하세요"); return; }
+    const id = "EQ-" + Date.now().toString(36).slice(-4).toUpperCase();
+    const e = { id, name: n, zone: $("mZn").value.trim() || "미지정", v: +$("mV").value, s: { leak: 2, ins: 100, dT: 5, load: 50, hum: 50 } };
+    e.base = { ...e.s }; e.arc = false; e.water = false; e.lock = null; e.prev = "OK";
+    EQ.push(e); ORIG[id] = { ...e.base };
+    $("mNm").value = ""; $("mZn").value = "";
+    refreshEq(); renderMgr(); renderMon(); save(); toast("설비 추가 완료");
+  };
+
+  const SK = "elec-safety-v5";
+  function save() {
+    setStore(SK, JSON.stringify({
+      eq: EQ.map(e => ({ id: e.id, name: e.name, zone: e.zone, v: e.v, lock: e.lock })),
+      insp, inspHist, saved: TH.saved, log: log.slice(0, 60), lt, lotoHist
+    }));
+  }
+  function load() {
+    try {
+      const d = JSON.parse(getStore(SK) || "null");
+      if (!d || !d.eq) return;
+      d.eq.forEach(m => {
+        let e = EQ.find(x => x.id === m.id);
+        if (!e) {
+          e = { id: m.id, name: m.name, zone: m.zone, v: m.v, s: { leak: 2, ins: 100, dT: 5, load: 50, hum: 50 } };
+          e.base = { ...e.s }; e.arc = false; e.water = false; e.prev = "OK";
+          EQ.push(e); ORIG[e.id] = { ...e.base };
+        } else { e.name = m.name; e.zone = m.zone; e.v = m.v; }
+        e.lock = m.lock || null;
+      });
+      Object.assign(insp, d.insp || {});
+      inspHist = d.inspHist || [];
+      TH.saved = d.saved || [];
+      (d.log || []).forEach(l => log.push(l));
+      lotoHist = d.lotoHist || [];
+      if (d.lt && EQ.some(e => e.id === d.lt.eq)) lt = d.lt;
+    } catch (e) {}
+  }
+
+  $("btnJson").onclick = () => {
+    save();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([getStore(SK) || "{}"], { type: "application/json" }));
+    a.download = `전기설비_백업_${todayStr()}.json`;
+    a.click();
+  };
+  $("fJson").onchange = ev => {
+    const f = ev.target.files[0]; if (!f) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      try {
+        const p = JSON.parse(fr.result);
+        if (!p.eq) throw new Error();
+        setStore(SK, fr.result);
+        location.reload();
+      } catch (e) { toast("백업 파일 오류"); }
+    };
+    fr.readAsText(f);
+  };
+  $("btnResetAll").onclick = () => {
+    delStore(SK);
+    delStore("elec-theme-v5");
+    location.reload();
+  };
+
+  const tick = () => { $("clock").textContent = new Date().toLocaleTimeString("ko-KR"); };
+  setInterval(tick, 1000); tick();
+  $("inspDate").textContent = new Date().toLocaleDateString("ko-KR");
+
+  load();
+  refreshEq();
+  renderMgr();
+  renderLoto();
+  renderDist();
+  renderInsp();
+  thOut();
+  renderSaved();
+  renderMon();
+})();
+</script>
+</body>
+</html>
